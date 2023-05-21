@@ -1902,6 +1902,8 @@ function system_ntp_configure() {
 	/* set NTP server authentication key */
 	if (config_get_path('ntpd/serverauth') == 'yes') {
 		$ntpkeyscfg = "1 " . strtoupper(config_get_path('ntpd/serverauthalgo')) . " " . base64_decode(config_get_path('ntpd/serverauthkey')) . "\n";
+		$ntp_key = 12345  #fix me ntp auth requires key to be inputted in GUI key input area
+		$ntpkeyscfg = $ntp_key . " " . strtoupper(config_get_path('ntpd/serverauthalgo')) . " " . base64_decode(config_get_path('ntpd/serverauthkey')) . "\n"; #fix me needs to be added from GUI NTP menu
 		if (!@file_put_contents("{$g['varetc_path']}/ntp.keys", $ntpkeyscfg)) {
 			log_error(sprintf(gettext("Could not open %s/ntp.keys for writing"), g_get('varetc_path')));
 			return;
@@ -1918,10 +1920,12 @@ function system_ntp_configure() {
 	if (config_get_path('ntpd/serverauth') == 'yes') {
 		$ntpcfg .= "# Authentication settings \n";
 		$ntpcfg .= "keys /var/etc/ntp.keys \n";
-		$ntpcfg .= "trustedkey 1 \n";
-		$ntpcfg .= "requestkey 1 \n";
-		$ntpcfg .= "controlkey 1 \n";
-		$ntpcfg .= "\n";
+		#$ntpcfg .= "trustedkey 1 \n";
+		#$ntpcfg .= "requestkey 1 \n";
+		#$ntpcfg .= "controlkey 1 \n";
+		$ntpcfg .= "trustedkey " . $ntp_key . " \n";
+		$ntpcfg .= "requestkey " . $ntp_key . " \n";
+		$ntpcfg .= "controlkey " . $ntp_key . " \n";		$ntpcfg .= "\n";
 	}
 
 	/* Add Orphan mode */
@@ -2096,6 +2100,9 @@ function system_ntp_configure() {
 		}
 		if (substr_count(config_get_path('ntpd/noselect'), $ts)) {
 			$ntpcfg .= ' noselect';
+		}
+		if (config_get_path('ntpd/serverauth') == 'yes') {
+			$ntpcfg .= " key " . $ntp_key . " ";
 		}
 		$ntpcfg .= "\n";
 	}
